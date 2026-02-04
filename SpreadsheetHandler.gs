@@ -80,15 +80,14 @@ function archiveSummary() {
   // 2. 集計シートの既存ヘッダーを取得
   let archiveHeaders = archiveSheet.getRange(1, 1, 1, archiveSheet.getLastColumn()).getValues()[0];
 
-  // 3. 日付を整形 (例: 26年2月1日(日))
+  // 3. 日付を取得（時刻を0時0分0秒にリセット）
   const now = new Date();
-  const days = ["日", "月", "火", "水", "木", "金", "土"];
-  const dateStr = Utilities.formatDate(now, "JST", "yy年M月d日") + "(" + days[now.getDay()] + ")";
+  now.setHours(0, 0, 0, 0);
 
   // 4. 新しい行の器を作成（初期値は空。A, B, C列は確定）
   let newRow = new Array(archiveHeaders.length).fill("");
-  newRow[0] = dateStr;    // 収集日
-  newRow[1] = totalCount; // 合計件数
+  newRow[0] = now;         // 収集日（Date型、時刻なし）
+  newRow[1] = totalCount;  // 合計件数
   newRow[2] = medianPrice; // 中央値
 
   // 5. スキルを適切な列にマッピング
