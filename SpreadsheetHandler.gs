@@ -58,16 +58,23 @@ function fetchTodayData(spreadsheetId, targetSheetName) {
 
 
 function archiveSummary() {
-  writeLog("開始", "処理を開始しました")
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const summarySheet = ss.getSheetByName("統合データ");
   const archiveSheet = ss.getSheetByName("集計");
+
+  // 統合データのB2セル（合計件数）を確認
+  const totalCount = summarySheet.getRange("B2").getValue();
+  
+  // データがない場合はスキップ（空、0、空文字列など）
+  if (!totalCount || totalCount === 0 || totalCount === "") {
+    console.log("⚠️ 統合シートにデータがないため、アーカイブ処理をスキップしました。");
+    return;
+  }
 
   // 1. 統合シートから最新結果（横一行）を取得
   // A列:日付, B列:合計, C列:中央値, D列以降:スキル名 ...
   const summaryHeaders = summarySheet.getRange(1, 4, 1, summarySheet.getLastColumn() - 3).getValues()[0];
   const summaryValues = summarySheet.getRange(2, 4, 1, summarySheet.getLastColumn() - 3).getValues()[0];
-  const totalCount = summarySheet.getRange("B2").getValue();
   const medianPrice = summarySheet.getRange("C2").getValue();
 
   // 2. 集計シートの既存ヘッダーを取得
@@ -93,15 +100,15 @@ function archiveSummary() {
     // もし集計シートにないスキルなら、右端に追加
     if (colIndex === -1) {
       archiveSheet.getRange(1, archiveHeaders.length + 1).setValue(skillName);
+      colIndex = archiveHeaders.length; // 新しい列のインデックスを取得
       archiveHeaders.push(skillName); // メモリ上のヘッダーリストも更新
-      newRow.push(summaryValues[index]); // 新しい列に値をセット
-    } else {
-      newRow[colIndex] = summaryValues[index]; // 既存の列に値をセット
     }
+    
+    // 既存または新規スキルの値をセット
+    newRow[colIndex] = summaryValues[index];
   });
 
   // 6. 集計シートの末尾に1行追加
   archiveSheet.appendRow(newRow);
   console.log("✅ 集計シートへのアーカイブが完了しました。新スキルがあれば自動追加しました。");
-  writeLog("終了", "処理を終了しました")
 }
