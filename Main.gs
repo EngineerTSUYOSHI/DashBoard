@@ -52,15 +52,17 @@ function runIntegration() {
       writeLog("失敗", `${siteName} からデータを取得できませんでした。`);
     }
   });
+
+  // 4. データを取得出来なかったサイトがある場合はエラーを通知
+  // ToDo: ここに通知ロジックを書く
+  if (errorSites.length > 0) {
+    const errorMessage = "以下のサイトからデータを取得できませんでした: " + errorSites.join(", ");
+    console.log(`❌ ${errorMessage}`);
+
+  // 5. 統合シートのデータを集計シートにコピー
+  archiveSummary();
+  writeLog("終了", "処理を終了しました")
+  }
 }
 
-// 4. データを取得出来なかったサイトがある場合はエラーを通知
-// ToDo: ここに通知ロジックを書く
-if (errorSites.length > 0) {
-  const errorMessage = "以下のサイトからデータを取得できませんでした: " + errorSites.join(", ");
-  console.log(`❌ ${errorMessage}`);
 
-// 5. 統合シートのデータを集計シートにコピー
-archiveSummary();
-writeLog("終了", "処理を終了しました")
-}
