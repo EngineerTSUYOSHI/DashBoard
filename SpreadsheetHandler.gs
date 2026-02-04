@@ -1,29 +1,3 @@
-function testMultiSheetConnection() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const configSheet = ss.getSheetByName("設定");
-  const TARGET_SHEET_NAME = "Python別、案件ランキング"; // ここに共通のシート名を入れてくれ
-  
-  // 設定シートのB2〜B4からIDを取得
-  const sheetIds = configSheet.getRange("B2:B4").getValues().flat();
-  
-  sheetIds.forEach((id, index) => {
-    if (!id) return; // 空セルはスキップ
-    
-    try {
-      const targetSS = SpreadsheetApp.openById(id);
-      const targetSheet = targetSS.getSheetByName(TARGET_SHEET_NAME);
-      
-      if (targetSheet) {
-        console.log(`✅ サイト${index + 1} 接続成功: 「${targetSS.getName()}」内の「${TARGET_SHEET_NAME}」を認識しました。`);
-      } else {
-        console.warn(`⚠️ サイト${index + 1} 接続成功: ですが、シート「${TARGET_SHEET_NAME}」が見つかりません。`);
-      }
-    } catch (e) {
-      console.error(`❌ サイト${index + 1} 接続失敗: ID "${id}" にアクセスできません。権限設定を確認してください。 エラー: ${e.message}`);
-    }
-  });
-}
-
 /**
  * サイト別シートのデータをクリアする（ヘッダーは保持）
  */
@@ -83,49 +57,6 @@ function fetchTodayData(spreadsheetId, targetSheetName) {
 }
 
 
-function runIntegration() {
-  // 1. まずは「サイト別」シートをクリア
-  clearSiteData();
-  
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const configSheet = ss.getSheetByName("設定");
-  const siteInfos = configSheet.getRange("A2:C4").getValues(); // A:サイト名, B:ID, C:シート名
-  
-  const destinationSheet = ss.getSheetByName("サイト別");
-
-  siteInfos.forEach(info => {
-    const [siteName, id, sheetName] = info;
-    if (!id) return;
-    
-    // データ取得（fetchTodayDataは全列取ってくる前提）
-    const rawData = fetchTodayData(id, "Python別、案件ランキング");
-    
-    if (rawData && rawData.length > 0) {
-      // 2. 必要な列だけを抽出して並べ替え
-      // インデックス: B=1, C=2, G=6, N=13
-      const filteredData = rawData.map(row => {
-        return [
-          row[1],   // A列へ：元シートのB列（取得日？）
-          siteName, // B列へ：スプシ名（設定シートのA列から取得）
-          row[2],   // C列へ：元シートのC列（案件名？）
-          row[6],   // D列へ：元シートのG列
-          row[13]   // E列へ：元シートのN列
-        ];
-      });
-      
-      // 3. 「サイト別」シートの末尾に追記
-      destinationSheet.getRange(
-        destinationSheet.getLastRow() + 1, 
-        1, 
-        filteredData.length, 
-        5 // A〜E列の5列固定
-      ).setValues(filteredData);
-      
-      console.log(`✅ ${siteName} から ${filteredData.length} 件を抽出してコピーしました。`);
-    }
-  });
-}
-
 function archiveSummary() {
   writeLog("開始", "処理を開始しました")
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -174,25 +105,3 @@ function archiveSummary() {
   console.log("✅ 集計シートへのアーカイブが完了しました。新スキルがあれば自動追加しました。");
   writeLog("終了", "処理を終了しました")
 }
-
-
-/**
- * 実行ログを「実行ログ」シートの末尾に追記する
- * @param {string} status - 「成功」「失敗」「警告」など
- * @param {string} message - ログの内容
- */
-function writeLog(status, message) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let logSheet = ss.getSheetByName("実行ログ");
-
-  // もし「実行ログ」という名前のシートがなければ、自動で作る（親切設計）
-  if (!logSheet) {
-    logSheet = ss.insertSheet("実行ログ");
-    logSheet.appendRow(["実行日時", "ステータス", "内容"]); // ヘッダー作成
-  }
-
-  // 実行時の日時、ステータス、メッセージを1行追加
-  const now = Utilities.formatDate(new Date(), "JST", "yyyy-MM-dd HH:mm:ss");
-  logSheet.appendRow([now, status, message]);
-}
-
