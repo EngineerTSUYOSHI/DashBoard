@@ -10,7 +10,7 @@ function runIntegration() {
   // 2. 設定シートからデータ取得先のアクセス情報を取得
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const configSheet = ss.getSheetByName("設定");
-  const siteInfos = configSheet.getRange("A2:C4").getValues(); // A:サイト名, B:ID, C:シート名
+  const siteInfos = configSheet.getRange("A2:B").getValues(); // A:サイト名, B:スプレッドシートID
   
   const destinationSheet = ss.getSheetByName("サイト別");
 
@@ -28,11 +28,11 @@ function runIntegration() {
       // インデックス: B=1, C=2, G=6, N=13
       const filteredData = rawData.map(row => {
         return [
-          row[1],   // A列へ：元シートのB列（取得日？）
-          siteName, // B列へ：スプシ名（設定シートのA列から取得）
-          row[2],   // C列へ：元シートのC列（案件名？）
-          row[3],   // D列へ：元シートのG列
-          row[10]   // E列へ：元シートのN列
+          row[1],   // A列へ：元シートのB列（取得日）
+          siteName, // B列へ：スプシ名
+          row[2],   // C列へ：元シートのC列（案件名）
+          row[3],   // D列へ：元シートのD列（月単価換算額）
+          row[10]   // E列へ：元シートのK列（スキル）
         ];
       });
       
@@ -59,11 +59,11 @@ function runIntegration() {
     const errorMessage = "以下のサイトからデータを取得できませんでした: " + errorSites.join(", ");
     console.log(`❌ ${errorMessage}`);
     sendChatworkMessage(errorMessage)
+  }
 
   // 5. 統合シートのデータを集計シートにコピー
   archiveSummary();
   writeLog("終了", "処理を終了しました")
-  }
 }
 
 
