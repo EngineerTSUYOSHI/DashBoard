@@ -31,8 +31,8 @@ function runIntegration() {
           row[1],   // A列へ：元シートのB列（取得日？）
           siteName, // B列へ：スプシ名（設定シートのA列から取得）
           row[2],   // C列へ：元シートのC列（案件名？）
-          row[6],   // D列へ：元シートのG列
-          row[13]   // E列へ：元シートのN列
+          row[3],   // D列へ：元シートのG列
+          row[10]   // E列へ：元シートのN列
         ];
       });
       
@@ -58,6 +58,7 @@ function runIntegration() {
   if (errorSites.length > 0) {
     const errorMessage = "以下のサイトからデータを取得できませんでした: " + errorSites.join(", ");
     console.log(`❌ ${errorMessage}`);
+    sendChatworkMessage(errorMessage)
 
   // 5. 統合シートのデータを集計シートにコピー
   archiveSummary();
